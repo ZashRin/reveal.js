@@ -16,8 +16,315 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h1>
+						OWASP Top 10
+					</h1>
+					<p>
+						<small>by Alex Shepelevich</small>
+					</p>
+				</section>
+				<section>
+					<section>
+						<p style="text-align: left; margin: 0 40%;">
+							Open<br>
+							Web<br>
+							Application<br>
+							Security<br>
+							Project
+						</p>
+						<aside class="notes">
+							It is an open community dedicated to enabling organizations to develop, purchase, and maintain applications and APIs that can be trusted.
+						</aside>
+					</section>
+					<section>
+						<p>
+							The OWASP Top 10 is a standard awareness document for developers and web application security.
+						</p>
+						<aside class="notes">
+							It represents a broad consensus about the most critical security risks to web applications.
+							And globally recognized by developers as the first step towards more secure coding.
+						</aside>
+					</section>
+				</section>
+				<section>
+					<p>Top  10</p>
+					<ol>
+						<li><a href="#/3">Broken Access Control</a></li>
+						<li><a href="#/4">Cryptographic Failures</a></li>
+						<li><a href="#/5">Injection</a></li>
+						<li><a href="#/6">Insecure Design</a></li>
+						<li><a href="#/7">Security Misconfiguration</a></li>
+						<li><a href="#/8">Vulnerable and Outdated Components</a></li>
+						<li><a href="#/9">Identification and Authentication Failures</a></li>
+						<li><a href="#/10">Software and Data Integrity Failures</a></li>
+						<li><a href="#/11">Security Logging and Monitoring Failures</a></li>
+						<li><a href="#/12">Server-Side Request Forgery</a></li>
+					</ol>
+				</section>
+				<section>
+					<section>
+						<h2>Broken Access Control</h2>
+						<p>
+							Access control enforces policy such that users cannot act outside of their intended permissions.
+							Failures typically lead to unauthorized information disclosure, modification, or destruction of all data or performing a business function outside the user's limits.
+						</p>
+						<aside class="notes">
+							Common access control vulnerabilities include:
+							<ul>
+								<li>
+									Violation of the principle of least privilege or deny by default, where access should only be granted for particular capabilities, roles, or users, but is available to anyone.
+								</li>
+								<li>
+									Bypassing access control checks by modifying the URL (parameter tampering or force browsing), internal application state, or the HTML page, or by using an attack tool modifying API requests.
+								</li>
+								<li>
+									Permitting viewing or editing someone else's account, by providing its unique identifier (insecure direct object references)
+								</li>
+								<li>
+									Accessing API with missing access controls for POST, PUT and DELETE.
+								</li>
+								<li>
+									Elevation of privilege. Acting as a user without being logged in or acting as an admin when logged in as a user.
+								</li>
+								<li>
+									Metadata manipulation, such as replaying or tampering with a JSON Web Token (JWT) access control token, or a cookie or hidden field manipulated to elevate privileges or abusing JWT invalidation.
+								</li>
+								<li>
+									CORS misconfiguration allows API access from unauthorized/untrusted origins.
+								</li>
+								<li>
+									Force browsing to authenticated pages as an unauthenticated user or to privileged pages as a standard user.
+								</li>
+							</ul>
+						</aside>
+					</section>
+					<section>
+						<h3>
+							How to Prevent
+						</h3>
+						<p>
+							Access control is only effective in trusted server-side code or server-less API, where the attacker cannot modify the access control check or metadata.
+						</p>
+						<p class="fragment">
+							Developers and QA staff should include functional access control unit and integration tests.
+						</p>
+						<aside class="notes">
+							<ul>
+								<li>Except for public resources, deny by default.</li>
+								<li>
+									Implement access control mechanisms once and re-use them throughout the application, including minimizing Cross-Origin Resource Sharing (CORS) usage.
+								</li>
+								<li>
+									Model access controls should enforce record ownership rather than accepting that the user can create, read, update, or delete any record.
+								</li>
+								<li>
+									Unique application business limit requirements should be enforced by domain models.
+								</li>
+								<li>
+									Disable web server directory listing and ensure file metadata (e.g., .git) and backup files are not present within web roots.
+								</li>
+								<li>
+									Log access control failures, alert admins when appropriate (e.g., repeated failures).
+								</li>
+								<li>
+									Rate limit API and controller access to minimize the harm from automated attack tooling.
+								</li>
+								<li>
+									Stateful session identifiers should be invalidated on the server after logout. Stateless JWT tokens should rather be short-lived so that the window of opportunity for an attacker is minimized. For longer lived JWTs it's highy recommended to follow the OAuth standards to revoke access.
+								</li>
+							</ul>
+						</aside>
+					</section>
+					<section>
+						<h3>Examples</h3>	
+					</section>
+					<section>
+						<p>
+							<b>Scenario #1:</b> The application uses unverified data in a SQL call that is accessing account information:
+						</p>
+						<pre><code data-trim contenteditable style="font-size: 18px;">
+							pstmt.setString(1, request.getParameter("acct"));
+							ResultSet results = pstmt.executeQuery( );
+						</code></pre>
+						<p>
+							An attacker simply modifies the browser's 'acct' parameter to send whatever account number they want. If not correctly verified, the attacker can access any user's account.
+						</p>
+						<pre><code data-trim contenteditable style="font-size: 18px;">
+							https://example.com/app/accountInfo?acct=notmyacct
+						</code></pre>
+					</section>
+					<section>
+						<p>
+							<b>Scenario #2:</b> An attacker simply forces browses to target URLs. Admin rights are required for access to the admin page.
+						</p>
+						<pre><code data-trim contenteditable style="font-size: 18px;">
+							https://example.com/app/getappInfo
+							https://example.com/app/admin_getappInfo
+						</code></pre>
+						<p>
+							If an unauthenticated user can access either page, it's a flaw. If a non-admin can access the admin page, this is a flaw.
+						</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Cryptographic Failures</h2>
+						<p class="fragment">
+							The first thing is to determine the protection needs of data in transit and at rest.
+						</p>
+						<p class="fragment">
+							Some data may require extra protetion.
+						</p>
+						<aside class="notes">
+							<p>
+								For example, passwords, credit card numbers, health records, personal information, and business secrets require extra protection, mainly if that data falls under privacy laws, e.g., EU's General Data Protection Regulation (GDPR), or regulations, e.g., financial data protection such as PCI Data Security Standard (PCI DSS).
+							</p>
+						</aside>
+					</section>
+					<section>
+						<p>How to prevent</p>
+						<ul>
+							<li class="fragment">
+								Classify data processed, stored, or transmitted by an application. Identify which data is sensitive.
+							</li>
+							<li class="fragment">
+								Don't store sensitive data unnecessarily. Discard it as soon as possible or use PCI DSS compliant tokenization or even truncation.
+							</li>
+							<li class="fragment">
+								Make sure to encrypt all sensitive data at rest.
+							</li>
+							<li class="fragment">
+								Encrypt all data in transit with secure protocols
+							</li>
+							<li class="fragment">
+								Disable caching for response that contain sensitive data.
+							</li>
+						</ul>
+						<p class="fragment">etc etc etc</p>
+					</section>
+					<section>
+						<h3>Examples</h3>
+						<p class="fragment" style="font-size: 34px;">
+							<b>Scenario #1:</b> An application encrypts credit card numbers in a database using automatic database encryption. However, this data is automatically decrypted when retrieved, allowing a SQL injection flaw to retrieve credit card numbers in clear text.
+						</p>
+						<p class="fragment" style="font-size: 34px;">
+							<b>Scenario #2:</b> The password database uses unsalted or simple hashes to store everyone's passwords. A file upload flaw allows an attacker to retrieve the password database. All the unsalted hashes can be exposed with a rainbow table of pre-calculated hashes. Hashes generated by simple or fast hash functions may be cracked by GPUs, even if they were salted.
+						</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>
+							Injection
+						</h2>
+						<p>
+							Some of the more common injections are SQL, NoSQL, OS command, Object Relational Mapping (ORM), LDAP, and Expression Language (EL) or Object Graph Navigation Library (OGNL) injection.
+						</p>
+						<aside class="notes">
+							<ul>
+								<li>
+									User-supplied data is not validated, filtered, or sanitized by the application.
+								</li>
+								<li>
+									Dynamic queries or non-parameterized calls without context-aware escaping are used directly in the interpreter.
+								</li>
+								<li>
+									Hostile data is used within object-relational mapping (ORM) search parameters to extract additional, sensitive records.
+								</li>
+								<li>
+									Hostile data is directly used or concatenated. The SQL or command contains the structure and malicious data in dynamic queries, commands, or stored procedures.
+								</li>
+							</ul>
+						</aside>
+					</section>
+					<section>
+						<h3>How to prevent</h3>
+						<p>Preventing injection requires keeping data separate from commands and queries.</p>
+						<aside class="notes">
+							<ul>
+								<li>
+									The preferred option is to use a safe API, which avoids using the interpreter entirely, provides a parameterized interface, or migrates to Object Relational Mapping Tools (ORMs).
+								</li>
+								<li>
+									Use positive server-side input validation.
+								</li>
+								<li>
+									For any residual dynamic queries, escape special characters using the specific escape syntax for that interpreter.
+								</li>
+								<li>
+									Use LIMIT and other SQL controls within queries to prevent mass disclosure of records in case of SQL injection.
+								</li>
+							</ul>
+						</aside>
+					</section>
+					<section>
+						<h3>Examples</h3>
+						<p style="font-size: 24px;">
+							<b>Scenario #1:</b> An application uses untrusted data in the construction of the following vulnerable SQL call:
+						</p>
+						<pre><code data-trim contenteditable style="font-size: 14px;">
+							String query = "SELECT \* FROM accounts WHERE custID='" + request.getParameter("id") + "'";
+						</code></pre>
+						<p style="font-size: 24px;">
+							<b>Scenario #2:</b> Similarly, an application’s blind trust in frameworks may result in queries that are still vulnerable, (e.g., Hibernate Query Language (HQL)):
+						</p>
+						<pre><code data-trim contenteditable style="font-size: 14px;">
+							Query HQLQuery = session.createQuery("FROM accounts WHERE custID='" + request.getParameter("id") + "'");
+						</code></pre>
+						<p style="font-size: 24px;">
+							In both cases, the attacker modifies the ‘id’ parameter value in their browser to send: ‘ or ‘1’=’1.
+						</p>
+						<p style="font-size: 24px;">
+							This changes the meaning of both queries to return all the records from the accounts table. More dangerous attacks could modify or delete data or even invoke stored procedures.
+						</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>
+							Insecure Design
+						</h2>
+						<p>
+							Insecure design is a broad category representing different weaknesses, expressed as “missing or ineffective control design.”
+						</p>
+						<p>
+							And secure design is a culture and methodology that constantly evaluates threats and ensures that code is robustly designed and tested to prevent known attack methods.
+						</p>
+					</section>
+					<section>
+						<h3>
+							How to prevent
+						</h3>
+						<ul>
+							<li class="fragment">
+								Establish and use a library of secure design patterns or paved road ready to use components
+							</li>
+							<li class="fragment">
+								Use threat modeling for critical authentication, access control, business logic, and key flows
+							</li>
+							<li class="fragment">
+								Integrate plausibility checks at each tier of your application	
+							</li>
+							<li class="fragment">
+								Limit resource consumption by user or service
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Examples</h3>
+						<p>
+							<b>Scenario #1:</b> A cinema chain allows group booking discounts and has a maximum of fifteen attendees before requiring a deposit. Attackers could threat model this flow and test if they could book six hundred seats and all cinemas at once in a few requests, causing a massive loss of income.
+						</p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>
+							Security Misconfiguration
+						</h2>
+					</section>
+				</section>
 			</div>
 		</div>
 

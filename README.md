@@ -1,3 +1,9 @@
+Steps to run presentation:
+1. clone this repo
+2. run npm install
+3. run npm start
+4. open http://localhost:8000/
+
 <p align="center">
   <a href="https://revealjs.com">
   <img src="https://hakim-static.s3.amazonaws.com/reveal-js/logo/v1/reveal-black-text-sticker.png" alt="reveal.js" width="500">
